@@ -79,12 +79,12 @@ function create() {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
-    // Add decorative image
+    // Ajouter une image décorative
     this.add.image(100, window.innerHeight - 100, 'deco1')
         .setScale(0.6)
         .setDepth(1);
 
-    this.add.image(centerX +165, centerY - 150, 'deco2')
+    this.add.image(centerX + 165, centerY - 150, 'deco2')
         .setScale(0.1)
         .setDepth(1);
 
@@ -92,18 +92,16 @@ function create() {
         .setScale(0.1)
         .setDepth(1);
 
-
     this.add.image(window.innerWidth - 100, 100, 'deco3')
         .setScale(0.05)
         .setDepth(1);
 
-  
-    // Calculate grid position dynamically
+    // Calculer la position de la grille dynamiquement
     const gridSizePixels = GRID_SIZE * gameState.unitSize;
     gameState.gridStartX = centerX - (gridSizePixels / 2);
     gameState.gridStartY = centerY - (gridSizePixels / 2) + 45;
 
-    // Add title
+    // Ajouter le titre
     this.add.text(centerX, centerY - 300, 'LevelCats', {
         font: '70px customFont',
         fill: '#fff',
@@ -111,27 +109,26 @@ function create() {
         strokeThickness: 6
     }).setOrigin(0.5).setDepth(2);
 
-    // Add coins display
+    // Ajouter l'affichage des pièces
     gameState.coinsText = this.add.text(centerX, centerY - 230, `Coins: ${gameState.coins}`, {
         font: '30px customFont',
         fill: '#FFD700'
     }).setOrigin(0.5).setDepth(2);
 
-    this.add.image(centerX -95, centerY - 232, 'coin')
+    this.add.image(centerX - 95, centerY - 232, 'coin')
         .setScale(0.6)
         .setDepth(1);
 
-
-    // Add timer display
+    // Ajouter l'affichage du temps
     gameState.timeText = this.add.text(centerX, centerY - 190, `Time: ${gameState.timeLeft}s`, {
         font: '24px customFont',
         fill: '#FFFFFF'
     }).setOrigin(0.5).setDepth(2);
 
-    // Draw the grid
+    // Dessiner la grille
     drawGrid(this);
 
-    // Create and configure the "Buy" button
+    // Créer et configurer le bouton "Acheter"
     const addUnitButton = this.add.rectangle(centerX, centerY + 300, 220, 60, 0xfffd77, 0.8)
         .setStrokeStyle(3, 0x000000)
         .setInteractive()
@@ -167,13 +164,13 @@ function create() {
             });
         });
 
-    // Add button text
+    // Ajouter le texte du bouton
     const buttonText = this.add.text(centerX, centerY + 300, 'Acheter | 20$', {
         font: '24px customFont',
         fill: '#000'
     }).setOrigin(0.5).setDepth(3);
 
-    // Function to update button state
+    // Fonction pour mettre à jour l'état du bouton
     const updateButtonState = () => {
         const emptySlot = findEmptySlot();
         if (!emptySlot || gameState.coins < gameState.levelUpCost) {
@@ -187,24 +184,24 @@ function create() {
         }
     };
 
-    // Update button state every 100ms
+    // Mettre à jour l'état du bouton toutes les 100ms
     this.time.addEvent({
         delay: 100,
         callback: updateButtonState,
         loop: true
     });
 
-    // Initial button state update
+    // Mise à jour initiale de l'état du bouton
     updateButtonState();
 
-    // Spawn hidden coins periodically
+    // Faire apparaître des pièces cachées périodiquement
     this.time.addEvent({
         delay: 10000,
         callback: spawnHiddenCoin,
         loop: true
     });
 
-    // Start the countdown timer
+    // Démarrer le compte à rebours
     gameState.timer = this.time.addEvent({
         delay: 1000,
         callback: updateTimer,
@@ -212,10 +209,9 @@ function create() {
         loop: true
     });
 
-    // Create the game over panel
+    // Créer le panneau de game over
     createGameOverPanel(this);
 }
-
 function createGameOverPanel(scene) {
     gameState.gameOverPanel = scene.add.group();
 
@@ -417,50 +413,17 @@ function spawnHiddenCoin() {
 }
 
 function purchaseUnit(scene) {
-    // Check if there is an empty slot on the grid
+
     const emptySlot = findEmptySlot();
     if (!emptySlot) {
-        console.log("Grid is full. Cannot purchase unit."); // Debugging: Log when grid is full
-        // Optionally, provide feedback to the player (e.g., a message or sound)
-        scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY + 300, 'Grid is full!', {
-            font: '24px customFont',
-            fill: '#FF0000'
-        }).setOrigin(0.5).setDepth(10);
-
-        // Remove the message after a short delay
-        scene.time.delayedCall(2000, () => {
-            scene.children.each(child => {
-                if (child.text === 'Grid is full!') {
-                    child.destroy();
-                }
-            });
-        });
-        return;
+        return; 
     }
-
-    // Check if the player has enough coins
     if (gameState.coins >= gameState.levelUpCost) {
-        console.log("Purchasing unit..."); // Debugging: Log when unit is purchased
         addNewUnit(scene);
         gameState.coins -= gameState.levelUpCost;
         updateCoinsDisplay();
-    } else {
-        console.log("Not enough coins to purchase unit."); // Debugging: Log when coins are insufficient
-        // Optionally, provide feedback to the player (e.g., a message or sound)
-        scene.add.text(scene.cameras.main.centerX, scene.cameras.main.centerY + 300, 'Not enough coins!', {
-            font: '24px customFont',
-            fill: '#FF0000'
-        }).setOrigin(0.5).setDepth(10);
+    } 
 
-        // Remove the message after a short delay
-        scene.time.delayedCall(2000, () => {
-            scene.children.each(child => {
-                if (child.text === 'Not enough coins!') {
-                    child.destroy();
-                }
-            });
-        });
-    }
 }
 
 function updateCoinsDisplay() {
