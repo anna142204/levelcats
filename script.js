@@ -21,7 +21,7 @@ class GameState {
         this.gameOverPanel = null;
         this.coinsText = null;
         this.timeText = null;
-        this.unitSize = 100;
+        this.unitSize = 120;
         this.gridStartX = 0; // Dynamically set
         this.gridStartY = 0; // Dynamically set
         this.levelUpCost = 20;
@@ -69,6 +69,9 @@ function preload() {
     this.load.image('unit', 'assets/chat.png');
     this.load.image('coin', 'assets/coin.png');
     this.load.image('deco1', 'assets/catfond.png');
+    this.load.image('deco2', 'assets/patte.png');
+    this.load.image('deco3', 'assets/traces.png');
+    this.load.image('deco4', 'assets/trace.svg');
     this.load.font('customFont', 'assets/SourGummy-VariableFont_wdth,wght.ttf');
 }
 
@@ -81,28 +84,47 @@ function create() {
         .setScale(0.6)
         .setDepth(1);
 
+    this.add.image(centerX +165, centerY - 150, 'deco2')
+        .setScale(0.1)
+        .setDepth(1);
+
+    this.add.image(centerX - 225, centerY + 385, 'deco2')
+        .setScale(0.1)
+        .setDepth(1);
+
+
+    this.add.image(window.innerWidth - 100, 100, 'deco3')
+        .setScale(0.05)
+        .setDepth(1);
+
+  
     // Calculate grid position dynamically
     const gridSizePixels = GRID_SIZE * gameState.unitSize;
     gameState.gridStartX = centerX - (gridSizePixels / 2);
-    gameState.gridStartY = centerY - (gridSizePixels / 2) + 20;
+    gameState.gridStartY = centerY - (gridSizePixels / 2) + 45;
 
     // Add title
-    this.add.text(centerX, centerY - 270, 'LevelCats', {
-        font: '60px customFont',
+    this.add.text(centerX, centerY - 300, 'LevelCats', {
+        font: '70px customFont',
         fill: '#fff',
         stroke: '#000000',
         strokeThickness: 6
     }).setOrigin(0.5).setDepth(2);
 
     // Add coins display
-    gameState.coinsText = this.add.text(centerX, centerY - 200, `Coins: ${gameState.coins}`, {
-        font: '24px customFont',
+    gameState.coinsText = this.add.text(centerX, centerY - 230, `Coins: ${gameState.coins}`, {
+        font: '30px customFont',
         fill: '#FFD700'
     }).setOrigin(0.5).setDepth(2);
 
+    this.add.image(centerX -95, centerY - 232, 'coin')
+        .setScale(0.6)
+        .setDepth(1);
+
+
     // Add timer display
-    gameState.timeText = this.add.text(centerX, centerY - 170, `Time: ${gameState.timeLeft}s`, {
-        font: '20px customFont',
+    gameState.timeText = this.add.text(centerX, centerY - 190, `Time: ${gameState.timeLeft}s`, {
+        font: '24px customFont',
         fill: '#FFFFFF'
     }).setOrigin(0.5).setDepth(2);
 
@@ -110,7 +132,7 @@ function create() {
     drawGrid(this);
 
     // Create and configure the "Buy" button
-    const addUnitButton = this.add.rectangle(centerX, centerY + 240, 200, 50, 0xfffd77, 0.8)
+    const addUnitButton = this.add.rectangle(centerX, centerY + 300, 220, 60, 0xfffd77, 0.8)
         .setStrokeStyle(3, 0x000000)
         .setInteractive()
         .setDepth(2)
@@ -146,8 +168,8 @@ function create() {
         });
 
     // Add button text
-    const buttonText = this.add.text(centerX, centerY + 240, 'Acheter | 20$', {
-        font: '20px customFont',
+    const buttonText = this.add.text(centerX, centerY + 300, 'Acheter | 20$', {
+        font: '24px customFont',
         fill: '#000'
     }).setOrigin(0.5).setDepth(3);
 
