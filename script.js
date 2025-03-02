@@ -1,4 +1,3 @@
-
 const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
@@ -11,6 +10,7 @@ const config = {
     }
 };
 
+// Manages the game state including grid, coins, time, and UI elements
 class GameState {
     constructor() {
         this.grid = [];
@@ -30,6 +30,7 @@ class GameState {
         this.reset();
     }
 
+    // Resets the game state to initial values
     reset() {
         this.grid = [];
         for (let row = 0; row < GRID_SIZE; row++) {
@@ -38,13 +39,11 @@ class GameState {
                 this.grid[row][col] = null;
             }
         }
-
         this.coins = 500;
         this.timeLeft = 180;
         this.gameActive = true;
         this.hiddenCoins = [];
     }
-
 }
 
 const GRID_SIZE = 3;
@@ -60,17 +59,18 @@ const COLORS = {
     9: 0x88ff88,
     10: 0xff88ff,
     default: 0xaaaaaa
-
 };
 let actualmaxlevel = 1;
 let game;
 let gameState;
 
+// Initializes the Phaser game and game state
 function init() {
     game = new Phaser.Game(config);
     gameState = new GameState();
 }
 
+// Preloads assets like images, fonts, and audio
 function preload() {
     this.load.image('gridCell', 'assets/case.png');
     this.load.image('unit', 'assets/chat.png');
@@ -81,29 +81,17 @@ function preload() {
     this.load.image('deco4', 'assets/trace.svg');
     this.load.font('customFont', 'assets/SourGummy-VariableFont_wdth,wght.ttf');
     this.load.audio('coinSound', 'assets/coin.mp3');
-    // this.load.audio('catlvl', 'assets/catlvl.mp3');
-    // this.load.audio('catfusion', 'assets/catfusion.mp3');
 }
 
+// Sets up the game scene, UI, and initializes grid and buttons
 function create() {
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
 
-    this.add.image(100, window.innerHeight - 100, 'deco1')
-        .setScale(0.6)
-        .setDepth(1);
-
-    this.add.image(centerX + 165, centerY - 150, 'deco2')
-        .setScale(0.1)
-        .setDepth(1);
-
-    this.add.image(centerX - 225, centerY + 385, 'deco2')
-        .setScale(0.1)
-        .setDepth(1);
-
-    this.add.image(window.innerWidth - 100, 100, 'deco3')
-        .setScale(0.05)
-        .setDepth(1);
+    this.add.image(100, window.innerHeight - 100, 'deco1').setScale(0.6).setDepth(1);
+    this.add.image(centerX + 165, centerY - 150, 'deco2').setScale(0.1).setDepth(1);
+    this.add.image(centerX - 225, centerY + 385, 'deco2').setScale(0.1).setDepth(1);
+    this.add.image(window.innerWidth - 100, 100, 'deco3').setScale(0.05).setDepth(1);
 
     const gridSizePixels = GRID_SIZE * gameState.unitSize;
     gameState.gridStartX = centerX - (gridSizePixels / 2);
@@ -126,9 +114,7 @@ function create() {
         fill: '#FFD700'
     }).setOrigin(0.5).setDepth(2);
 
-    this.add.image(centerX - 95, centerY - 232, 'coin')
-        .setScale(0.6)
-        .setDepth(1);
+    this.add.image(centerX - 95, centerY - 232, 'coin').setScale(0.6).setDepth(1);
 
     gameState.timeText = this.add.text(centerX, centerY - 190, `Time: ${gameState.timeLeft}s`, {
         font: '24px customFont',
@@ -198,24 +184,20 @@ function create() {
         }
     };
 
-    // Mettre à jour l'état du bouton toutes les 100ms
     this.time.addEvent({
         delay: 100,
         callback: updateButtonState,
         loop: true
     });
 
-    // Mise à jour initiale de l'état du bouton
     updateButtonState();
 
-    // Faire apparaître des pièces cachées périodiquement
     this.time.addEvent({
         delay: 10000,
         callback: spawnHiddenCoin,
         loop: true
     });
 
-    // Démarrer le compte à rebours
     gameState.timer = this.time.addEvent({
         delay: 1000,
         callback: updateTimer,
@@ -226,10 +208,10 @@ function create() {
     gameState.gameOverPanel = createPanel(this, 'GAME OVER', '#FF0000');
     gameState.winPanel = createPanel(this, 'YOU WIN!', '#00FF00');
 }
+
+// Creates a panel for game over or win states
 function createPanel(scene, title, titleColor) {
     const panel = scene.add.group();
-
-    // Semi-transparent overlay
     const overlay = scene.add.rectangle(
         scene.cameras.main.centerX,
         scene.cameras.main.centerY,
@@ -238,7 +220,6 @@ function createPanel(scene, title, titleColor) {
         0x000000, 0.7
     ).setDepth(10);
 
-    // Title text
     const titleText = scene.add.text(
         scene.cameras.main.centerX,
         scene.cameras.main.centerY - 100,
@@ -251,7 +232,6 @@ function createPanel(scene, title, titleColor) {
         }
     ).setOrigin(0.5).setDepth(10);
 
-    // Final score text
     const finalScoreText = scene.add.text(
         scene.cameras.main.centerX,
         scene.cameras.main.centerY,
@@ -262,7 +242,6 @@ function createPanel(scene, title, titleColor) {
         }
     ).setOrigin(0.5).setDepth(10);
 
-    // Replay button
     const replayButton = scene.add.rectangle(
         scene.cameras.main.centerX,
         scene.cameras.main.centerY + 100,
@@ -279,48 +258,41 @@ function createPanel(scene, title, titleColor) {
         }
     ).setOrigin(0.5).setDepth(10);
 
-    // Replay button event
     replayButton.on('pointerdown', () => {
         resetGame(scene);
     });
 
-    // Add all elements to the group
     panel.add(overlay);
     panel.add(titleText);
     panel.add(finalScoreText);
     panel.add(replayButton);
     panel.add(replayText);
-
-    // Reference to the final score text for updates
     panel.finalScoreText = finalScoreText;
-
-    // Initially hide the panel
     panel.setVisible(false);
 
     return panel;
 }
+
+// Checks if there are any valid moves left on the grid
 function hasValidMoves() {
     for (let row = 0; row < GRID_SIZE; row++) {
         for (let col = 0; col < GRID_SIZE; col++) {
             const unit = gameState.grid[row][col];
             if (unit) {
-                // Check all directions for possible fusions
                 const directions = [
                     { r: -1, c: 0 }, { r: 1, c: 0 },
                     { r: 0, c: -1 }, { r: 0, c: 1 },
                     { r: -1, c: -1 }, { r: -1, c: 1 },
                     { r: 1, c: -1 }, { r: 1, c: 1 }
                 ];
-
                 for (let d of directions) {
                     for (let step = 1; step <= 2; step++) {
                         const newRow = row + d.r * step;
                         const newCol = col + d.c * step;
-
                         if (isValidGridPosition(newRow, newCol)) {
                             const neighbor = gameState.grid[newRow][newCol];
                             if (neighbor && neighbor.level === unit.level) {
-                                return true; // Valid move found
+                                return true;
                             }
                         }
                     }
@@ -328,29 +300,21 @@ function hasValidMoves() {
             }
         }
     }
-    return false; // No valid moves left
+    return false;
 }
+
+// Displays a panel (game over or win) and stops the game
 function showPanel(scene, panel) {
     gameState.gameActive = false;
-
-    // Update high score
     const highScore = localStorage.getItem('highScore') || 0;
     if (gameState.coins > highScore) {
         localStorage.setItem('highScore', gameState.coins);
     }
-
-    // Stop the timer
     if (gameState.timer) {
         gameState.timer.remove();
     }
-
-    // Update the final score
     panel.finalScoreText.setText(`Score: ${gameState.coins}`);
-
-    // Show the panel
     panel.setVisible(true);
-
-    // Animate the panel elements
     scene.tweens.add({
         targets: panel.getChildren(),
         alpha: { from: 0, to: 1 },
@@ -360,41 +324,30 @@ function showPanel(scene, panel) {
     });
 }
 
+// Resets the game to its initial state
 function resetGame(scene) {
-    // Stop the timer if it exists
     if (gameState.timer) {
         gameState.timer.remove();
     }
-
-    // Destroy all units on the grid
     for (let row = 0; row < GRID_SIZE; row++) {
         for (let col = 0; col < GRID_SIZE; col++) {
             const unit = gameState.grid[row][col];
             if (unit) {
-                unit.destroy(); // Destroy the Phaser object
+                unit.destroy();
                 if (unit.text) {
-                    unit.text.destroy(); // Destroy the associated text
+                    unit.text.destroy();
                 }
-                gameState.grid[row][col] = null; // Clear the grid cell
+                gameState.grid[row][col] = null;
             }
         }
     }
-
-    // Destroy all hidden coins
     gameState.hiddenCoins.forEach(coin => coin.destroy());
     gameState.hiddenCoins = [];
-
-    // Reset the game state
     gameState.reset();
-
     gameState.gameOverPanel.setVisible(false);
     gameState.winPanel.setVisible(false);
-
-    // Update the UI
     updateCoinsDisplay();
     gameState.timeText.setText(`Time: ${gameState.timeLeft}s`);
-
-    // Restart the timer
     gameState.timer = scene.time.addEvent({
         delay: 1000,
         callback: updateTimer,
@@ -403,48 +356,39 @@ function resetGame(scene) {
     });
 }
 
+// Updates the timer and checks if the game is over
 function updateTimer() {
     if (!gameState.gameActive) return;
-
     gameState.timeLeft--;
     gameState.timeText.setText(`Time: ${gameState.timeLeft}s`);
-
-    // Game over if time runs out
     if (gameState.timeLeft <= 0) {
         showPanel(this, gameState.gameOverPanel);
     }
 }
 
+// Empty update function (can be used for real-time updates)
 function update() { }
 
+// Draws the grid on the screen
 function drawGrid(scene) {
     for (let row = 0; row < GRID_SIZE; row++) {
         for (let col = 0; col < GRID_SIZE; col++) {
             const x = gameState.gridStartX + col * gameState.unitSize + gameState.unitSize / 2;
             const y = gameState.gridStartY + row * gameState.unitSize + gameState.unitSize / 2;
-
-            scene.add.image(x, y, 'gridCell')
-                .setDisplaySize(gameState.unitSize, gameState.unitSize)
-                .setDepth(2);
+            scene.add.image(x, y, 'gridCell').setDisplaySize(gameState.unitSize, gameState.unitSize).setDepth(2);
         }
     }
 }
 
+// Spawns hidden coins on the screen for the player to collect
 function spawnHiddenCoin() {
     if (!gameState.gameActive) return;
-
     const centerX = game.scene.scenes[0].cameras.main.centerX;
     const centerY = game.scene.scenes[0].cameras.main.centerY;
     const range = 200;
-
     const x = Phaser.Math.Between(centerX - range, centerX + range);
     const y = Phaser.Math.Between(centerY - range, centerY + range);
-
-    const coin = game.scene.scenes[0].add.image(x, y, 'coin')
-        .setScale(1.2)
-        .setInteractive()
-        .setDepth(4);
-
+    const coin = game.scene.scenes[0].add.image(x, y, 'coin').setScale(1.2).setInteractive().setDepth(4);
     coin.on('pointerdown', () => {
         if (!gameState.gameActive) return;
         game.sound.play('coinSound');
@@ -453,9 +397,7 @@ function spawnHiddenCoin() {
         coin.destroy();
         gameState.hiddenCoins.splice(gameState.hiddenCoins.indexOf(coin), 1);
     });
-
     gameState.hiddenCoins.push(coin);
-
     game.scene.scenes[0].time.delayedCall(5000, () => {
         if (gameState.hiddenCoins.includes(coin)) {
             coin.destroy();
@@ -464,13 +406,10 @@ function spawnHiddenCoin() {
     });
 }
 
+// Purchases a new unit if there's an empty slot and enough coins
 function purchaseUnit(scene) {
-
     const emptySlot = findEmptySlot();
-    if (!emptySlot) {
-        return;
-    }
-
+    if (!emptySlot) return;
     if (gameState.coins >= gameState.levelUpCost) {
         addNewUnit(scene);
         gameState.coins -= gameState.levelUpCost;
@@ -478,14 +417,15 @@ function purchaseUnit(scene) {
     }
     if (!hasValidMoves() && isGridFull()) {
         showPanel(scene, gameState.gameOverPanel);
-        console.log('gameover2');
     }
 }
 
+// Updates the coins display text
 function updateCoinsDisplay() {
     gameState.coinsText.setText(`Coins: ${gameState.coins}`);
 }
 
+// Finds an empty slot in the grid
 function findEmptySlot() {
     for (let row = 0; row < GRID_SIZE; row++) {
         for (let col = 0; col < GRID_SIZE; col++) {
@@ -496,20 +436,23 @@ function findEmptySlot() {
     }
     return null;
 }
+
+// Checks if the grid is completely full
 function isGridFull() {
     for (let row = 0; row < GRID_SIZE; row++) {
         for (let col = 0; col < GRID_SIZE; col++) {
             if (gameState.grid[row][col] === null) {
-                return false; // Grid is not full
+                return false;
             }
         }
     }
-    return true; // Grid is full
+    return true;
 }
+
+// Adds a new unit to the grid at an empty slot
 function addNewUnit(scene) {
     const emptySlot = findEmptySlot();
     if (!emptySlot) return;
-
     const { row, col } = emptySlot;
     const x = gameState.gridStartX + col * gameState.unitSize + gameState.unitSize / 2;
     const y = gameState.gridStartY + row * gameState.unitSize + gameState.unitSize / 2;
@@ -517,36 +460,28 @@ function addNewUnit(scene) {
     if (actualmaxlevel >= 4) {
         unitLevel = Phaser.Math.Between(1, Math.max(2, Math.floor(actualmaxlevel / 2)));
     }
-
     createUnitAt(scene, row, col, x, y, unitLevel);
 }
 
+// Creates a unit at a specific grid position
 function createUnitAt(scene, row, col, x, y, level) {
     const unitColor = getUnitColor(level);
-    const unit = scene.add.image(x, y, 'unit')
-        .setDisplaySize(gameState.unitSize, gameState.unitSize)
-        .setTint(unitColor)
-        .setDepth(3);
-
+    const unit = scene.add.image(x, y, 'unit').setDisplaySize(gameState.unitSize, gameState.unitSize).setTint(unitColor).setDepth(3);
     const text = scene.add.text(x, y, level.toString(), {
         font: "20px customFont",
         fill: "#fff"
     }).setOrigin(0.5).setDepth(4);
-
     unit.level = level;
     unit.row = row;
     unit.col = col;
     unit.text = text;
-
     gameState.grid[row][col] = unit;
-
     unit.setInteractive();
     unit.on('pointerdown', () => {
         if (gameState.gameActive) {
             tryFusion(unit);
         }
     });
-
     scene.tweens.add({
         targets: unit,
         scale: 1.2,
@@ -555,10 +490,12 @@ function createUnitAt(scene, row, col, x, y, level) {
     });
 }
 
+// Returns the color for a unit based on its level
 function getUnitColor(level) {
     return COLORS[level] || COLORS.default;
 }
 
+// Attempts to fuse the selected unit with a neighboring unit of the same level
 function tryFusion(unit) {
     const { row, col, level } = unit;
     const directions = [
@@ -567,18 +504,14 @@ function tryFusion(unit) {
         { r: -1, c: -1 }, { r: -1, c: 1 },
         { r: 1, c: -1 }, { r: 1, c: 1 }
     ];
-
     for (let d of directions) {
         for (let step = 1; step <= 2; step++) {
             const newRow = row + d.r * step;
             const newCol = col + d.c * step;
-
             if (isValidGridPosition(newRow, newCol)) {
                 const neighbor = gameState.grid[newRow][newCol];
-
                 if (neighbor && neighbor.level === level) {
                     fuseUnits(unit, neighbor);
-                    // game.sound.play('catfusion');
                     return;
                 }
             }
@@ -586,32 +519,27 @@ function tryFusion(unit) {
     }
 }
 
+// Checks if a grid position is valid
 function isValidGridPosition(row, col) {
     return row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE;
 }
 
+// Fuses two units into a higher-level unit and updates the game state
 function fuseUnits(unit1, unit2) {
     const fusionLevel = unit1.level + 1;
     const reward = fusionLevel * 10;
     actualmaxlevel = Math.max(actualmaxlevel, fusionLevel);
-
     gameState.coins += reward;
     updateCoinsDisplay();
-
     unit1.text.destroy();
     unit2.text.destroy();
     unit1.destroy();
     unit2.destroy();
-
     gameState.grid[unit1.row][unit1.col] = null;
     gameState.grid[unit2.row][unit2.col] = null;
-
     const x = gameState.gridStartX + unit1.col * gameState.unitSize + gameState.unitSize / 2;
     const y = gameState.gridStartY + unit1.row * gameState.unitSize + gameState.unitSize / 2;
-
     createUnitAt(game.scene.scenes[0], unit1.row, unit1.col, x, y, fusionLevel);
-
-    // Game over if a high level is reached
     if (fusionLevel >= 10) {
         gameState.coins += 500;
         updateCoinsDisplay();
@@ -619,9 +547,8 @@ function fuseUnits(unit1, unit2) {
     }
     if (!hasValidMoves() && isGridFull()) {
         showPanel(game.scene.scenes[0], gameState.gameOverPanel);
-        console.log('gameover');
     }
 }
 
-// Start the game
+// Starts the game
 init();
