@@ -22,8 +22,8 @@ class GameState {
         this.coinsText = null;
         this.timeText = null;
         this.unitSize = 120;
-        this.gridStartX = 0; // Dynamically set
-        this.gridStartY = 0; // Dynamically set
+        this.gridStartX = 0;
+        this.gridStartY = 0;
         this.levelUpCost = 20;
         this.reset();
     }
@@ -39,7 +39,7 @@ class GameState {
         }
 
         this.coins = 500;
-        this.timeLeft = 60;
+        this.timeLeft = 180;
         this.gameActive = true;
         this.hiddenCoins = [];
     }
@@ -53,9 +53,15 @@ const COLORS = {
     3: 0x44ff44,
     4: 0xffff44,
     5: 0xff44ff,
+    6: 0x44ffff,
+    7: 0xff8888,
+    8: 0x8888ff,
+    9: 0x88ff88,
+    10: 0xff88ff,
     default: 0xaaaaaa
-};
 
+};
+let actualmaxlevel = 1;
 let game;
 let gameState;
 
@@ -73,6 +79,10 @@ function preload() {
     this.load.image('deco3', 'assets/traces.png');
     this.load.image('deco4', 'assets/trace.svg');
     this.load.font('customFont', 'assets/SourGummy-VariableFont_wdth,wght.ttf');
+    this.load.audio('coinSound', 'assets/coin.mp3');
+    // this.load.audio('catlvl', 'assets/catlvl.mp3');
+    // this.load.audio('catfusion', 'assets/catfusion.mp3');
+    //this.load.audio('fusionSound', 'assets/fusion.wav'); //this.sound.play('coinSound');
 }
 
 function create() {
@@ -101,6 +111,10 @@ function create() {
     gameState.gridStartX = centerX - (gridSizePixels / 2);
     gameState.gridStartY = centerY - (gridSizePixels / 2) + 45;
 
+    const highScore = localStorage.getItem('highScore') || 0;
+    if (gameState.coins > highScore) {
+        localStorage.setItem('highScore', gameState.coins);
+    }
     // Ajouter le titre
     this.add.text(centerX, centerY - 300, 'LevelCats', {
         font: '70px customFont',
@@ -127,6 +141,14 @@ function create() {
 
     // Dessiner la grille
     drawGrid(this);
+
+    const pauseButton = this.add.text(50, 50, 'Pause', { // <-- Fixed
+        font: '24px customFont',
+        fill: '#FFFFFF'
+    }).setInteractive().on('pointerdown', () => {
+        gameState.gameActive = !gameState.gameActive;
+        pauseButton.setText(gameState.gameActive ? 'Pause' : 'Resume');
+    });
 
     // Créer et configurer le bouton "Acheter"
     const addUnitButton = this.add.rectangle(centerX, centerY + 300, 220, 60, 0xfffd77, 0.8)
@@ -248,6 +270,7 @@ function createGameOverPanel(scene) {
         }
     ).setOrigin(0.5).setDepth(10);
 
+
     // Replay button
     const replayButton = scene.add.rectangle(
         scene.cameras.main.centerX,
@@ -283,9 +306,46 @@ function createGameOverPanel(scene) {
     // Initially hide the panel
     gameState.gameOverPanel.setVisible(false);
 }
+function hasValidMoves() {
+    for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+            const unit = gameState.grid[row][col];
+            if (unit) {
+                // Check all directions for possible fusions
+                const directions = [
+                    { r: -1, c: 0 }, { r: 1, c: 0 },
+                    { r: 0, c: -1 }, { r: 0, c: 1 },
+                    { r: -1, c: -1 }, { r: -1, c: 1 },
+                    { r: 1, c: -1 }, { r: 1, c: 1 }
+                ];
 
+                for (let d of directions) {
+                    for (let step = 1; step <= 2; step++) {
+                        const newRow = row + d.r * step;
+                        const newCol = col + d.c * step;
+
+                        if (isValidGridPosition(newRow, newCol)) {
+                            const neighbor = gameState.grid[newRow][newCol];
+                            if (neighbor && neighbor.level === unit.level) {
+                                console.log('Valid move found');
+                                return true; // Valid move found
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false; // No valid moves left
+}
 function showGameOver(scene) {
     gameState.gameActive = false;
+
+    // Update high score
+    const highScore = localStorage.getItem('highScore') || 0;
+    if (gameState.coins > highScore) {
+        localStorage.setItem('highScore', gameState.coins);
+    }
 
     // Stop the timer
     if (gameState.timer) {
@@ -395,7 +455,7 @@ function spawnHiddenCoin() {
 
     coin.on('pointerdown', () => {
         if (!gameState.gameActive) return;
-
+        game.sound.play('coinSound');
         gameState.coins += 50;
         updateCoinsDisplay();
         coin.destroy();
@@ -416,14 +476,16 @@ function purchaseUnit(scene) {
 
     const emptySlot = findEmptySlot();
     if (!emptySlot) {
-        return; 
+        return;
     }
     if (gameState.coins >= gameState.levelUpCost) {
         addNewUnit(scene);
         gameState.coins -= gameState.levelUpCost;
         updateCoinsDisplay();
-    } 
-
+    }
+    if (!hasValidMoves() && isGridFull()) {
+        showGameOver(scene);
+    }
 }
 
 function updateCoinsDisplay() {
@@ -440,7 +502,16 @@ function findEmptySlot() {
     }
     return null;
 }
-
+function isGridFull() {
+    for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
+            if (gameState.grid[row][col] === null) {
+                return false; // Grid is not full
+            }
+        }
+    }
+    return true; // Grid is full
+}
 function addNewUnit(scene) {
     const emptySlot = findEmptySlot();
     if (!emptySlot) return;
@@ -448,7 +519,10 @@ function addNewUnit(scene) {
     const { row, col } = emptySlot;
     const x = gameState.gridStartX + col * gameState.unitSize + gameState.unitSize / 2;
     const y = gameState.gridStartY + row * gameState.unitSize + gameState.unitSize / 2;
-    const unitLevel = 1;
+    let unitLevel = 1;
+    if (actualmaxlevel >= 4) {
+        unitLevel = Phaser.Math.Between(1, Math.max(2, Math.floor(actualmaxlevel / 2))); 
+    }
 
     createUnitAt(scene, row, col, x, y, unitLevel);
 }
@@ -510,6 +584,9 @@ function tryFusion(unit) {
 
                 if (neighbor && neighbor.level === level) {
                     fuseUnits(unit, neighbor);
+                    actualmaxlevel = Math.max(actualmaxlevel, level);
+                    console.log(actualmaxlevel);
+                    // game.sound.play('catfusion');
                     return;
                 }
             }
@@ -542,9 +619,12 @@ function fuseUnits(unit1, unit2) {
     createUnitAt(game.scene.scenes[0], unit1.row, unit1.col, x, y, fusionLevel);
 
     // Game over if a high level is reached
-    if (fusionLevel >= 5) {
+    if (fusionLevel >= 10) {
         gameState.coins += 500;
         updateCoinsDisplay();
+        showGameOver(game.scene.scenes[0]);
+    }
+    if (!hasValidMoves() && isGridFull()) {
         showGameOver(game.scene.scenes[0]);
     }
 }
