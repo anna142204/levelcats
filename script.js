@@ -460,8 +460,8 @@ function addNewUnit(scene) {
     const x = gameState.gridStartX + col * gameState.unitSize + gameState.unitSize / 2;
     const y = gameState.gridStartY + row * gameState.unitSize + gameState.unitSize / 2;
     let unitLevel = 1;
-    if (actualMaxLevel >= 4) {
-        unitLevel = Phaser.Math.Between(1, Math.max(2, Math.floor(actualMaxLevel / 2)));
+    if (gameState.actualMaxLevel >= 4) {
+        unitLevel = Phaser.Math.Between(1, Math.max(2, Math.floor(gameState.actualMaxLevel / 2)));
     }
     createUnitAt(scene, row, col, x, y, unitLevel);
 }
@@ -531,7 +531,7 @@ function isValidGridPosition(row, col) {
 function fuseUnits(unit1, unit2) {
     const fusionLevel = unit1.level + 1;
     const reward = fusionLevel * 10;
-    actualMaxLevel = Math.max(actualMaxLevel, fusionLevel);
+    gameState.actualMaxLevel = Math.max(gameState.actualMaxLevel, fusionLevel);
     gameState.coins += reward;
     updateCoinsDisplay();
     unit1.text.destroy();
