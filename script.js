@@ -28,6 +28,7 @@ class GameState {
         this.gridStartY = 0;
         this.levelUpCost = 30;
         this.actualMaxLevel = 1;
+        this.timerStarted = false;
         this.reset();
     }
 
@@ -46,6 +47,7 @@ class GameState {
         this.hiddenCoins = [];
         this.levelUpCost = 30;
         this.actualMaxLevel = 1;
+        this.timerStarted = false;
     }
 }
 
@@ -201,12 +203,12 @@ function create() {
         loop: true
     });
 
-    gameState.timer = this.time.addEvent({
-        delay: 1000,
-        callback: updateTimer,
-        callbackScope: this,
-        loop: true
-    });
+    // gameState.timer = this.time.addEvent({
+    //     delay: 1000,
+    //     callback: updateTimer,
+    //     callbackScope: this,
+    //     loop: true
+    // });
 
     gameState.gameOverPanel = createPanel(this, 'GAME OVER', '#FF0000');
     gameState.winPanel = createPanel(this, 'YOU WIN!', '#00FF00');
@@ -349,6 +351,7 @@ function resetGame(scene) {
     gameState.reset();
     gameState.gameOverPanel.setVisible(false);
     gameState.winPanel.setVisible(false);
+    gameState.timerStarted = false; 
     updateCoinsDisplay();
     gameState.timeText.setText(`Time: ${gameState.timeLeft}s`);
     gameState.timer = scene.time.addEvent({
@@ -418,6 +421,18 @@ function purchaseUnit(scene) {
         gameState.coins -= gameState.levelUpCost;
         updateCoinsDisplay();
     }
+
+    if (!gameState.timerStarted) {
+        gameState.timerStarted = true;
+        gameState.timer = scene.time.addEvent({
+            delay: 1000,
+            callback: updateTimer,
+            callbackScope: scene,
+            loop: true
+        });
+    }
+
+    
     if (!hasValidMoves() && isGridFull()) {
         showPanel(scene, gameState.gameOverPanel);
     }
