@@ -27,6 +27,7 @@ class GameState {
         this.gridStartX = 0;
         this.gridStartY = 0;
         this.levelUpCost = 30;
+        this.actualMaxLevel = 1;
         this.reset();
     }
 
@@ -40,11 +41,11 @@ class GameState {
             }
         }
         this.coins = 500;
-        this.timeLeft = 180;
+        this.timeLeft = 210;
         this.gameActive = true;
         this.hiddenCoins = [];
         this.levelUpCost = 30;
-            actualMaxLevel = 1;
+        this.actualMaxLevel = 1;
     }
 }
 
@@ -62,7 +63,7 @@ const COLORS = {
     10: 0xff88ff,
     default: 0xaaaaaa
 };
-let actualMaxLevel = 1;
+
 let game;
 let gameState;
 
